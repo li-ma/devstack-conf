@@ -1,0 +1,80 @@
+[[local|localrc]]
+
+LOGFILE=$DEST/logs/stack.sh.log
+
+HOST_IP=192.168.139.200
+KEYSTONE_DEPLOY=uwsgi
+OVS_INSTALL_FROM_GIT=True
+# ENABLE_DPDK=True
+# OVS_BRANCH=master
+
+# use TryStack git mirror
+GIT_BASE=http://git.trystack.cn
+NOVNC_REPO=http://git.trystack.cn/kanaka/noVNC.git
+SPICE_REPO=http://git.trystack.cn/git/spice/spice-html5.git
+
+# DOWNLOAD_DEFAULT_IMAGES=False
+# IMAGE_URLS="http://images.trystack.cn/cirros/cirros-0.3.4-x86_64-disk.img"
+
+#OFFLINE=True
+RECLONE=False
+DEBUG=True
+FORCE=yes
+
+NEUTRON_CREATE_INITIAL_NETWORKS=True
+
+TUNNEL_TYPE=vxlan
+Q_ENABLE_DRAGONFLOW_LOCAL_CONTROLLER=True
+DF_SELECTIVE_TOPO_DIST=True
+DF_PUB_SUB=True
+USE_ML2_PLUGIN=True
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=df
+ML2_L3_PLUGIN=df-l3
+
+DATABASE_PASSWORD=password
+RABBIT_PASSWORD=password
+SERVICE_PASSWORD=password
+SERVICE_TOKEN=password
+ADMIN_PASSWORD=password
+
+enable_plugin dragonflow http://git.openstack.org/openstack/dragonflow
+enable_service df-etcd
+enable_service df-etcd-server
+enable_service df-controller
+enable_service df-ext-services
+enable_service df-zmq-publisher-service
+enable_service df-metadata
+
+disable_service n-net
+enable_service q-svc
+enable_service df-l3-agent
+disable_service q-dhcp
+disable_service q-meta
+disable_service heat
+disable_service tempest
+
+# We have to disable the neutron L2 agent. DF does not use the L2 agent.
+disable_service q-agt
+
+[[post-config|$NEUTRON_CONF]]
+[quotas]
+quota_port = -1
+quota_network = -1
+quota_subnet = -1
+[DEFAULT]
+router_distributed=True
+api_workers = 1
+
+[[post-config|$NOVA_CONF]]
+[vnc]
+vncserver_proxyclient_address = 192.168.139.200
+vncserver_listen = 192.168.139.200
+[DEFAULT]
+metadata_workers = 1
+osapi_compute_workers = 1
+[conductor]
+workers = 1
+
+[[post-config|$CINDER_CONF]]
+[DEFAULT]
+osapi_volume_workers = 1
