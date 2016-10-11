@@ -1,0 +1,53 @@
+[[local|localrc]]
+HOST_IP=192.168.8.113
+
+# use TryStack git mirror
+GIT_BASE=http://git.trystack.cn
+NOVNC_REPO=http://git.trystack.cn/kanaka/noVNC.git
+SPICE_REPO=http://git.trystack.cn/git/spice/spice-html5.git
+
+DATABASE_PASSWORD=password
+RABBIT_PASSWORD=password
+SERVICE_PASSWORD=password
+SERVICE_TOKEN=password
+ADMIN_PASSWORD=password
+
+# Disable these services unless you need them
+disable_service cinder c-sch c-api c-vol
+disable_service tempest
+
+# Standard settings for enabling Neutron
+disable_service n-net
+enable_service q-svc q-dhcp q-l3 q-meta
+
+# The OVS/LB agent part of Neutron is not used
+disable_service q-agt
+
+# Enable networking-vpp plugin
+enable_plugin networking-vpp https://github.com/openstack/networking-vpp
+
+Q_PLUGIN=ml2
+Q_ML2_PLUGIN_MECHANISM_DRIVERS=vpp
+Q_ML2_PLUGIN_TYPE_DRIVERS=vlan,flat
+Q_ML2_TENANT_NETWORK_TYPE=vlan
+ML2_VLAN_RANGES=physnet1:100:200
+
+# Map physical networks to uplink trunk interfaces on VPP
+# Find your uplink interfaces by using the command "sudo vppctl show int"
+# Use local0 as the upstream interface if you are doing a one host deployment
+MECH_VPP_PHYSNETLIST=physnet1:local0
+# Set the IP address of the etcd host to connect to
+ETCD_HOST=$HOST_IP
+# Etcd port to connect to
+ETCD_PORT=2379
+
+[[post-config|$NOVA_CONF]]
+[DEFAULT]
+reserved_huge_pages = node:0,size:2048,count:256
+metadata_workers = 1
+osapi_compute_workers = 1
+[vnc]
+vncserver_proxyclient_address = $HOST_IP
+vncserver_listen = $HOST_IP
+[conductor]
+workers = 1
